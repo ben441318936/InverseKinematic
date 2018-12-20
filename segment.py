@@ -5,16 +5,8 @@ class segment(object):
 	def __init__(self,x=0,y=0,len_=0,ang_=0):
 		self.base = np.array([x,y])
 		self.len = len_
+		# Angle of a segment is with reference to horizontal
 		self.ang = ang_
-		self.calculate_tip()
-
-	def follow(self,target):
-		# target is a numpy vector
-		direction = target - self.base
-		self.ang = np.arctan2(direction[1],direction[0])
-		if np.linalg.norm(direction) > 1e-10:
-			direction = direction / np.linalg.norm(direction) * self.len
-		self.base = target - direction;
 		self.calculate_tip()
 
 	def calculate_tip(self,):

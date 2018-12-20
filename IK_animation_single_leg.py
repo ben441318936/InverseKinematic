@@ -71,7 +71,7 @@ ax.set_ylabel('Y')
 ax.set_zlim3d([-3.0, 3.0])
 ax.set_zlabel('Z')
 
-ax.set_title('3D Test')
+ax.set_title('Single Leg Test')
 
 # Creating the Animation object
 line_ani = animation.FuncAnimation(fig, update_legs, 270, fargs=(legs, lines, positions, False),
