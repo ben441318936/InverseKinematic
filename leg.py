@@ -129,7 +129,7 @@ class leg(object):
 			results.append(s.get_angle())
 		if mode == 'servo':
 			# If values are sent to servo, the angles are with reference to each joint
-			for i in range(1,len(results)):
+			for i in range(2,len(results)):
 				results[i] = results[i] - results[i-1]
 		elif mode != 'sim':
 			# If values are for simulation output, we can show angles with reference to horizontal
