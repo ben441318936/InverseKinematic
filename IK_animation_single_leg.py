@@ -54,10 +54,29 @@ for t in range(50):
 	positions.append([1+2*np.cos(t*np.pi/2/49-np.pi/2),0,2*np.sin(t*np.pi/2/49-np.pi/2)])
 '''
 
-# Circular crawl path
+# Point convergence test
+'''
+for t in range(10):
+	positions.append([3,0,0])
+for t in range(10):
+	positions.append([1+np.sqrt(2),0,np.sqrt(2)])
+for t in range(10):
+	positions.append([3,0,0])
+for t in range(10):
+	positions.append([1+np.sqrt(2),0,-1*np.sqrt(2)])
+'''
 
-for t in range(200):
-	positions.append([1+np.sqrt(2),-1*np.sqrt(2)*np.cos(t*2*np.pi/199+np.pi/2),1*np.sqrt(2)*np.sin(t*2*np.pi/199+np.pi/2)])
+# Circular crawl path
+'''
+for t in range(100):
+	positions.append([1+np.sqrt(2),-1*np.sqrt(2)*np.cos(t*2*np.pi/99-np.pi/2),1*np.sqrt(2)*np.sin(t*2*np.pi/99-np.pi/2)])
+'''
+
+# Elliptical crawl path
+
+for t in range(100):
+	positions.append([1+np.sqrt(2),-1*np.sqrt(2)*np.cos(t*2*np.pi/99-np.pi/2),1/2*np.sqrt(2)*np.sin(t*2*np.pi/99-np.pi/2)])
+
 
 legs = leg.leg(3,[1,1,1])
 endpoints = legs.get_3D_endpoints()
@@ -97,7 +116,7 @@ ax.set_zlabel('Z')
 ax.set_title('Single Leg Test')
 
 # Creating the Animation object
-line_ani = animation.FuncAnimation(fig, update_legs, 200, fargs=(legs, lines, texts, ax, positions, False),
+line_ani = animation.FuncAnimation(fig, update_legs, 100, fargs=(legs, lines, texts, ax, positions, False),
                               interval=0.1, blit=False)
 
 plt.show()
