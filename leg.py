@@ -35,20 +35,18 @@ class leg(object):
 		tar_theta_plane = np.array([rho,z])
 		#print("Plane target:",rho,z)
 
-		# Compute new angle, if new angle has big change, use the damped version
-		prev_angs = self.get_angles(mode='servo')[1:]
-		for i in range(2):
-			self.follow_in_theta_plane_lsq(tar_theta_plane,prev_angs)
+		# Compute new angle, using LM damped by angle change
+		self.follow_in_theta_plane_lsq(tar_theta_plane)
 
 		return None
 
-	def follow_in_theta_plane_lsq(self,tar_theta_plane,prev_angs):
+	def follow_in_theta_plane_lsq(self,tar_theta_plane):
 
 		n = len(self.segments)
 
 		# Using Levenberg–Marquardt algorithm on only location objective
-		x = self.LM_algo(tar_theta_plane,prev_angs,min_ang_change=False)
-
+		# x = self.LM_algo(tar_theta_plane,prev_angs,gamma=0)
+		'''
 		# Compare results to previous angles, if change is large, use multi-objective LM
 		for i in range(0,n-1):
 			if np.abs(x[i]-prev_angs[i]) > np.pi/18:
@@ -58,31 +56,38 @@ class leg(object):
 				large_change = False
 
 		if large_change:
-			x = self.LM_algo(tar_theta_plane,prev_angs,min_ang_change=True)
+			x = self.LM_algo(tar_theta_plane,prev_angs,gamma=0.1)
+		'''
 
-		# Set the segment angles using the non-linear least-squares solution
-		for i in range(1,n):
-			self.segments[i].set_angle(np.sum(x[0:i]))
-			if i < n-1:
-				self.segments[i+1].set_base(self.segments[i].get_tip())
+		# More iterations better results
+		# gamma controls the relative importance of angle change
+		for k in range(0,3):
+			prev_angs = self.get_angles(mode='servo')[1:]
+			x = self.LM_algo(tar_theta_plane,prev_angs,gamma=0.1)
+
+			# Set the segment angles using the non-linear least-squares solution
+			for i in range(1,n):
+				self.segments[i].set_angle(np.sum(x[0:i]))
+				if i < n-1:
+					self.segments[i+1].set_base(self.segments[i].get_tip())
 
 		return None
 
-	def LM_algo(self,tar_theta_plane,prev_angs,min_ang_change=False):
+	def LM_algo(self,tar_theta_plane,prev_angs,gamma=0):
 		n = len(self.segments)
 		x = np.zeros(n-1)
-		f = self.compute_f(x,tar_theta_plane,prev_angs,min_ang_change)
+		f = self.compute_f(x,tar_theta_plane,prev_angs,gamma)
 		#print("f:",f)
 		lamb = 0.1
 		# More iterations better results
 		for i in range(100):
-			delta_x = self.compute_delta_x(x,lamb,tar_theta_plane,prev_angs,min_ang_change)
+			delta_x = self.compute_delta_x(x,lamb,tar_theta_plane,prev_angs,gamma)
 			if np.linalg.norm(delta_x) < 1e-6:
 				#print("i:",i)
 				break
 			x_hat = x - delta_x
 			# Check if function value actually decreases
-			if np.linalg.norm(self.compute_f(x_hat,tar_theta_plane,prev_angs,min_ang_change)) < np.linalg.norm(self.compute_f(x,tar_theta_plane,prev_angs,min_ang_change)):
+			if np.linalg.norm(self.compute_f(x_hat,tar_theta_plane,prev_angs,gamma)) < np.linalg.norm(self.compute_f(x,tar_theta_plane,prev_angs,gamma)):
 				x = x_hat
 				lamb = self.beta1*lamb
 			else: 
@@ -92,13 +97,9 @@ class leg(object):
 		return x
 
 	# Computes the actual function value that we are minimizing at the current step
-	def compute_f(self,x,des_pt,prev_angs,min_ang_change=False):
-		gamma = 0.1
+	def compute_f(self,x,des_pt,prev_angs,gamma=0):
 		n = len(self.segments)
-		if min_ang_change:
-			f = np.zeros(2*(n-1))
-		else:
-			f = np.zeros(n-1)
+		f = np.zeros(2*(n-1))
 		f[0] = self.segments[0].len
 		ang = 0
 		for i in range(1,n):
@@ -107,20 +108,15 @@ class leg(object):
 			f[1] = f[1] + self.segments[i].len * np.sin(ang)
 		f[0] = f[0] - des_pt[0]
 		f[1] = f[1] - des_pt[1]
-		if min_ang_change:
-			f[2:] = gamma*(x - prev_angs)
+		f[2:] = gamma*(x - prev_angs)
 
 		return f
 
 	# Computes update at current step
-	def compute_delta_x(self,x,lamb,des_pt,prev_angs,min_ang_change=False):
+	def compute_delta_x(self,x,lamb,des_pt,prev_angs,gamma=0):
 		# Gamma controls the relative weight of ensuring small angle changes
-		gamma = 0.1
 		n = len(self.segments)
-		if min_ang_change:
-			jab = np.zeros((2*(n-1),n-1))
-		else:
-			jab = np.zeros((n-1,n-1))
+		jab = np.zeros((2*(n-1),n-1))
 		for i in range(1,n):
 			# jab_i is the ith row of the Jacobian matrix
 			jab_1 = 0
@@ -132,19 +128,17 @@ class leg(object):
 				jab_2 = jab_2 + self.segments[j].len * np.cos(ang)
 			jab[0,i-1] = jab_1
 			jab[1,i-1] = jab_2
-		if min_ang_change:
-			jab[2,0] = np.sqrt(gamma)
-			jab[2,1] = 0
-			jab[3,0] = 0
-			jab[3,1] = np.sqrt(gamma)
-		
+		jab[2,0] = np.sqrt(gamma)
+		jab[2,1] = 0
+		jab[3,0] = 0
+		jab[3,1] = np.sqrt(gamma)
 
 		a = np.matmul( np.transpose(jab) , jab)
 		b = a + lamb*np.identity(n-1)
 		c = np.linalg.inv(b)
 		d = np.matmul( c, np.transpose(jab))
 
-		delta_x = np.matmul( d , self.compute_f(x,des_pt,prev_angs,min_ang_change))
+		delta_x = np.matmul( d , self.compute_f(x,des_pt,prev_angs,gamma))
 
 		return delta_x 
 
