@@ -42,34 +42,47 @@ class leg(object):
 
 	def follow_in_theta_plane_lsq(self,tar_theta_plane):
 
-		n = len(self.segments)
+		# PARAMs to tune: 
+		# 	angle change tolerance
+		#	iterations of damped LM
+		#	damping factor
 
+		ang_change_tol = np.pi/18
+		damped_LM_iters = 3
+		damping_factor = 0.15
+
+		n = len(self.segments)
+		prev_angs = self.get_angles(mode='servo')[1:]
 		# Using Levenberg–Marquardt algorithm on only location objective
-		# x = self.LM_algo(tar_theta_plane,prev_angs,gamma=0)
-		'''
+		x = self.LM_algo(tar_theta_plane,prev_angs,gamma=0)
+		
 		# Compare results to previous angles, if change is large, use multi-objective LM
 		for i in range(0,n-1):
-			if np.abs(x[i]-prev_angs[i]) > np.pi/18:
+			if np.abs(x[i]-prev_angs[i]) > ang_change_tol:
 				large_change = True
 				break
 			else:
 				large_change = False
 
 		if large_change:
-			x = self.LM_algo(tar_theta_plane,prev_angs,gamma=0.1)
-		'''
+			# More iterations better results
+			# gamma controls the relative importance of angle change
+			for k in range(0,damped_LM_iters):
+				prev_angs = self.get_angles(mode='servo')[1:]
+				x = self.LM_algo(tar_theta_plane,prev_angs,gamma=damping_factor)
 
-		# More iterations better results
-		# gamma controls the relative importance of angle change
-		for k in range(0,3):
-			prev_angs = self.get_angles(mode='servo')[1:]
-			x = self.LM_algo(tar_theta_plane,prev_angs,gamma=0.1)
-
+				# Set the segment angles using the non-linear least-squares solution
+				for i in range(1,n):
+					self.segments[i].set_angle(np.sum(x[0:i]))
+					if i < n-1:
+						self.segments[i+1].set_base(self.segments[i].get_tip())
+		else:
 			# Set the segment angles using the non-linear least-squares solution
 			for i in range(1,n):
 				self.segments[i].set_angle(np.sum(x[0:i]))
 				if i < n-1:
 					self.segments[i+1].set_base(self.segments[i].get_tip())
+		
 
 		return None
 

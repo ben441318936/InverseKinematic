@@ -6,14 +6,12 @@ import matplotlib.animation as animation
 
 import leg
 
-import time
-
-start = time.time()
+FIRST_LEG_LEN = 1.45
+SECOND_LEG_LEN = 2
+THIRD_LEG_LEN = 4.5
 
 def update_legs(num, legs, lines, texts, ax, positions,prin=False):
 	legs.follow_lsq(positions[num]);
-	if (num == 199):
-		print(time.time()-start)
 	endpoints = legs.get_3D_endpoints()
 	endpoints = np.array(endpoints)
 	endpointsT = np.transpose(endpoints)
@@ -43,51 +41,50 @@ positions = []
 # Demo path
 '''
 for t in range(50):
-	positions.append([2+1*np.cos(t*np.pi/2/49),0,1*np.sin(t*np.pi/2/49)])
+	positions.append([FIRST_LEG_LEN+SECOND_LEG_LEN+THIRD_LEG_LEN*np.cos(t*np.pi/2/49),0,THIRD_LEG_LEN*np.sin(t*np.pi/2/49)])
 
 for t in range(70):
-	positions.append([2-1*t/69,0,1+1*t/69])
+	positions.append([FIRST_LEG_LEN+SECOND_LEG_LEN-SECOND_LEG_LEN*t/69,0,THIRD_LEG_LEN+SECOND_LEG_LEN*t/69])
 
 for t in range(100):
-	positions.append([1*np.cos(t*2*np.pi/99),1*np.sin(t*2*np.pi/99),2])
+	positions.append([FIRST_LEG_LEN*np.cos(t*2*np.pi/99),FIRST_LEG_LEN*np.sin(t*2*np.pi/99),SECOND_LEG_LEN+THIRD_LEG_LEN])
 
 for t in range(100):
-	positions.append([1+2*np.cos(-1*t*np.pi/99+np.pi/2),0,2*np.sin(-1*t*np.pi/99+np.pi/2)])
+	positions.append([FIRST_LEG_LEN+(SECOND_LEG_LEN+THIRD_LEG_LEN)*np.cos(-1*t*np.pi/99+np.pi/2),0,(SECOND_LEG_LEN+THIRD_LEG_LEN)*np.sin(-1*t*np.pi/99+np.pi/2)])
 
 for t in range(50):
-	positions.append([1+2*np.cos(t*np.pi/2/49-np.pi/2),0,2*np.sin(t*np.pi/2/49-np.pi/2)])
+	positions.append([FIRST_LEG_LEN+(SECOND_LEG_LEN+THIRD_LEG_LEN)*np.cos(t*np.pi/2/49-np.pi/2),0,(SECOND_LEG_LEN+THIRD_LEG_LEN)*np.sin(t*np.pi/2/49-np.pi/2)])
 '''
 
 # Point convergence test
 '''
 for t in range(10):
-	positions.append([3,0,0])
+	positions.append([FIRST_LEG_LEN+SECOND_LEG_LEN+THIRD_LEG_LEN,0,0])
 for t in range(10):
-	positions.append([1+np.sqrt(2),0,np.sqrt(2)])
+	positions.append([FIRST_LEG_LEN+(SECOND_LEG_LEN+THIRD_LEG_LEN)*np.cos(np.pi/4),0,(SECOND_LEG_LEN+THIRD_LEG_LEN)*np.cos(np.pi/4)])
 for t in range(10):
-	positions.append([3,0,0])
+	positions.append([FIRST_LEG_LEN+SECOND_LEG_LEN+THIRD_LEG_LEN,0,0])
 for t in range(10):
-	positions.append([1+np.sqrt(2),0,-1*np.sqrt(2)])
+	positions.append([FIRST_LEG_LEN+(SECOND_LEG_LEN+THIRD_LEG_LEN)*np.cos(np.pi/4),0,-1*(SECOND_LEG_LEN+THIRD_LEG_LEN)*np.cos(np.pi/4)])
 '''
 
 # Circular crawl path
 '''
 for t in range(100):
-	positions.append([1+np.sqrt(2),-1*np.sqrt(2)*np.cos(t*2*np.pi/99-np.pi/2),1*np.sqrt(2)*np.sin(t*2*np.pi/99-np.pi/2)])
+	positions.append([FIRST_LEG_LEN+(SECOND_LEG_LEN+THIRD_LEG_LEN)*np.cos(np.pi/4),-1*(SECOND_LEG_LEN+THIRD_LEG_LEN)*np.cos(np.pi/4)*np.cos(t*2*np.pi/99-np.pi/2),1*(SECOND_LEG_LEN+THIRD_LEG_LEN)*np.cos(np.pi/4)*np.sin(t*2*np.pi/99-np.pi/2)])
 for t in range(100):
-	positions.append([3,0,0])
+	positions.append([FIRST_LEG_LEN+SECOND_LEG_LEN+THIRD_LEG_LEN,0,0])
 '''
 
 # Elliptical crawl path
 
 for t in range(100):
-	positions.append([1+np.sqrt(2),-1*np.sqrt(2)*np.cos(t*2*np.pi/99-np.pi/2),1/2*np.sqrt(2)*np.sin(t*2*np.pi/99-np.pi/2)])
-for t in range(100):
-	positions.append([3,0,0])
+	positions.append([FIRST_LEG_LEN+(SECOND_LEG_LEN+THIRD_LEG_LEN)*np.cos(np.pi/4),-1*np.sqrt(SECOND_LEG_LEN+THIRD_LEG_LEN)*np.cos(t*2*np.pi/99-np.pi/2),1/2*(SECOND_LEG_LEN+THIRD_LEG_LEN)*np.cos(np.pi/4)*np.sin(t*2*np.pi/99-np.pi/2)])
+for t in range(50):
+	positions.append([FIRST_LEG_LEN+SECOND_LEG_LEN+THIRD_LEG_LEN,0,0])
 
 
-
-legs = leg.leg(3,[1,1,1])
+legs = leg.leg(3,[FIRST_LEG_LEN,SECOND_LEG_LEN,THIRD_LEG_LEN])
 endpoints = legs.get_3D_endpoints()
 endpoints = np.array(endpoints)
 
@@ -113,19 +110,19 @@ texts.append(ax.text2D(endpoints[3,0],endpoints[3,1],"test",color='black',fontsi
 
 
 # Setting the axes properties
-ax.set_xlim3d([-3.0, 3.0])
+ax.set_xlim3d([-1*(FIRST_LEG_LEN+SECOND_LEG_LEN+THIRD_LEG_LEN), 1*(FIRST_LEG_LEN+SECOND_LEG_LEN+THIRD_LEG_LEN)])
 ax.set_xlabel('X')
 
-ax.set_ylim3d([-3.0, 3.0])
+ax.set_ylim3d([-1*(FIRST_LEG_LEN+SECOND_LEG_LEN+THIRD_LEG_LEN), 1*(FIRST_LEG_LEN+SECOND_LEG_LEN+THIRD_LEG_LEN)])
 ax.set_ylabel('Y')
 
-ax.set_zlim3d([-3.0, 3.0])
+ax.set_zlim3d([-1*(FIRST_LEG_LEN+SECOND_LEG_LEN+THIRD_LEG_LEN), 1*(FIRST_LEG_LEN+SECOND_LEG_LEN+THIRD_LEG_LEN)])
 ax.set_zlabel('Z')
 
 ax.set_title('Single Leg Test')
 
 # Creating the Animation object
-line_ani = animation.FuncAnimation(fig, update_legs, 200, fargs=(legs, lines, texts, ax, positions, True),
+line_ani = animation.FuncAnimation(fig, update_legs, 150, fargs=(legs, lines, texts, ax, positions, True),
                               interval=0.1, blit=False)
 
 plt.show()
