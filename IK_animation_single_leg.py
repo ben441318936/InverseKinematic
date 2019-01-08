@@ -25,7 +25,7 @@ def update_legs(num, legs, lines, texts, ax, positions,prin=False):
 	for text,ang,pos in zip(texts,angs,endpoints[0:3]):
 		x,y,_ = proj3d.proj_transform(pos[0],pos[1],pos[2], ax.get_proj())
 		text.set_position((x,y))
-		text.set_text('%.3f'%(ang))
+		text.set_text('%.1f'%(ang))
 	
 	'''
 	lines.set_data(endpoints[0:2,:])
@@ -80,9 +80,10 @@ for t in range(100):
 
 for t in range(100):
 	positions.append([FIRST_LEG_LEN+(SECOND_LEG_LEN+THIRD_LEG_LEN)*np.cos(np.pi/4),-1*np.sqrt(SECOND_LEG_LEN+THIRD_LEG_LEN)*np.cos(t*2*np.pi/99-np.pi/2),1/2*(SECOND_LEG_LEN+THIRD_LEG_LEN)*np.cos(np.pi/4)*np.sin(t*2*np.pi/99-np.pi/2)])
+'''
 for t in range(50):
 	positions.append([FIRST_LEG_LEN+SECOND_LEG_LEN+THIRD_LEG_LEN,0,0])
-
+'''
 
 legs = leg.leg(3,[FIRST_LEG_LEN,SECOND_LEG_LEN,THIRD_LEG_LEN])
 endpoints = legs.get_3D_endpoints()
@@ -122,7 +123,7 @@ ax.set_zlabel('Z')
 ax.set_title('Single Leg Test')
 
 # Creating the Animation object
-line_ani = animation.FuncAnimation(fig, update_legs, 150, fargs=(legs, lines, texts, ax, positions, True),
+line_ani = animation.FuncAnimation(fig, update_legs, 100, fargs=(legs, lines, texts, ax, positions, True),
                               interval=0.1, blit=False)
 
 plt.show()
